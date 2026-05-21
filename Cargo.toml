@@ -5,3 +5,6 @@ edition = "2024"
 
 [dependencies]
 argh = "0.1.19"
+polars = { version = "0.53.0", features = ["lazy", "parquet"] }
+reqwest = { version = "0.13.3", features = ["blocking"] }
+zip = "8.6.0"
