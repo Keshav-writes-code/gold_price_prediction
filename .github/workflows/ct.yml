@@ -5,7 +5,7 @@ on:
 jobs:
   build_cli:
     name: Build CLI for the app
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: sh
