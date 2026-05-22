@@ -3,17 +3,16 @@ use std::fs::File;
 use polars::prelude::{UnionArgs, concat};
 use polars::{io::parquet::write::ParquetWriter, lazy::frame::LazyFrame};
 
-use self::internet_zip_injestion::ZipInjestion;
+use self::internet_zip_ingestion::ZipIngestion;
 
-mod api_injestion;
-mod internet_zip_injestion;
+mod internet_zip_ingestion;
 
-pub trait InjestionStratergy {
+pub trait IngestionStratergy {
     fn fetch_data(&self) -> LazyFrame;
 }
 pub const FEATURE_STORE_PATH: &str = "output.parquet";
-pub fn hanlde_injestion() {
-    let stratergies: Vec<Box<dyn InjestionStratergy>> = vec![Box::new(ZipInjestion)];
+pub fn hanlde_ingestion() {
+    let stratergies: Vec<Box<dyn IngestionStratergy>> = vec![Box::new(ZipIngestion)];
 
     let mut frames = Vec::new();
     for stratergy in stratergies {

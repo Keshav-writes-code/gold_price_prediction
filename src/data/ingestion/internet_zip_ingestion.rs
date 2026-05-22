@@ -9,20 +9,20 @@ use polars::lazy::{
     frame::{LazyCsvReader, LazyFileListReader, LazyFrame},
 };
 
-use super::InjestionStratergy;
+use super::IngestionStratergy;
 
 const URL: &str = "https://www.kaggle.com/api/v1/datasets/download/rizkykiky/gold-price-dataset";
 const DEST: &str = "/tmp/extracted_files";
 
-pub struct ZipInjestion;
+pub struct ZipIngestion;
 
-impl InjestionStratergy for ZipInjestion {
+impl IngestionStratergy for ZipIngestion {
     fn fetch_data(&self) -> LazyFrame {
         Self::download_and_extract_zip();
         Self::read_csv_file()
     }
 }
-impl ZipInjestion {
+impl ZipIngestion {
     fn download_and_extract_zip() {
         fs::create_dir_all(DEST).unwrap();
 

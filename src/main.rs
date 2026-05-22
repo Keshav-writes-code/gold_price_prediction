@@ -19,9 +19,8 @@ struct Input {
 fn main() {
     let inputs: Input = argh::from_env();
     if inputs.pull {
-        gold_price_prediction::injestion::hanlde_injestion();
-
         // logic to download data from cagle and store then in a sqlite database
+        gold_price_prediction::data::ingestion::hanlde_ingestion();
     }
     if inputs.viz {
         // logic to visualize data stored in sqlite
