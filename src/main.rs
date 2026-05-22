@@ -7,6 +7,7 @@ struct Input {
     #[argh(switch, short = 't')]
     train: bool,
 
+    #[cfg(feature = "visualization")]
     /// visualize the data
     #[argh(switch, short = 'v')]
     viz: bool,
@@ -22,6 +23,7 @@ fn main() {
         // logic to download data from cagle and store then in a sqlite database
         gold_price_prediction::data::ingestion::hanlde_ingestion();
     }
+    #[cfg(feature = "visualization")]
     if inputs.viz {
         // logic to visualize data
         gold_price_prediction::data::visulization::init_visulization();
