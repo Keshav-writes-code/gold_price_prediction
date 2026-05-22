@@ -23,7 +23,8 @@ fn main() {
         gold_price_prediction::data::ingestion::hanlde_ingestion();
     }
     if inputs.viz {
-        // logic to visualize data stored in sqlite
+        // logic to visualize data
+        gold_price_prediction::data::visulization::init_visulization();
     }
     if inputs.train {}
 }
