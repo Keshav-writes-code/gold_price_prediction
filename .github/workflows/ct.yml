@@ -1,0 +1,23 @@
+name: Continuos Traning
+on:
+  push
+
+jobs:
+  build_cli:
+    name: Build CLI for the app
+    runs-on: ubuntu-slim
+    defaults:
+      run:
+        shell: sh
+    steps:
+      - name: Setup rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Checkout Repo
+        uses: actions/checkout@v6
+
+      - name: Build Cli
+        run: cargo build --release
+      
+    
+    
