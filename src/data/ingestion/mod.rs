@@ -1,32 +1,35 @@
-use std::fs::File;
-
-use polars::prelude::{UnionArgs, concat};
-use polars::{io::parquet::write::ParquetWriter, lazy::frame::LazyFrame};
-
 use self::internet_zip_ingestion::ZipIngestion;
-
+use ndarray::Array1;
+use serde::{Deserialize, Serialize};
 mod internet_zip_ingestion;
 
-pub trait IngestionStratergy {
-    fn fetch_data(&self) -> LazyFrame;
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct GoldRecord {
+    #[serde(rename = "Date")]
+    pub date: String,
+    #[serde(rename = "INR")]
+    pub inr: f64,
 }
-pub const FEATURE_STORE_PATH: &str = "output.parquet";
-pub fn hanlde_ingestion() {
+
+pub trait IngestionStratergy {
+    fn fetch_data(&self) -> Vec<GoldRecord>;
+}
+
+pub const FEATURE_STORE_PATH: &str = "data.csv";
+
+pub fn hanlde_ingestion() -> Array1<f64> {
     let stratergies: Vec<Box<dyn IngestionStratergy>> = vec![Box::new(ZipIngestion)];
 
-    let mut frames = Vec::new();
+    let mut all_records = Vec::new();
     for stratergy in stratergies {
-        frames.push(stratergy.fetch_data());
+        all_records.extend(stratergy.fetch_data());
     }
+    let mut writer = csv::Writer::from_path(FEATURE_STORE_PATH).expect("Error cann't init writer");
 
-    if !frames.is_empty() {
-        let combined_lf = concat(frames, UnionArgs::default()).unwrap();
-        let mut df = combined_lf.collect().unwrap();
-
-        let mut file = File::create(&FEATURE_STORE_PATH).unwrap();
-        ParquetWriter::new(&mut file)
-            .with_compression(polars::io::parquet::write::ParquetCompression::Zstd(None))
-            .finish(&mut df)
-            .unwrap();
-    }
+    all_records.iter().for_each(|record| {
+        writer.serialize(record).expect("Failed");
+    });
+    writer.flush().expect("Cannot write to file");
+    let prices = all_records.into_iter().map(|r| r.inr);
+    Array1::from_iter(prices)
 }
