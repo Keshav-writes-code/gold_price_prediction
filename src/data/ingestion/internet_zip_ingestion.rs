@@ -1,5 +1,5 @@
 use std::{
-    fs::{File, write},
+    fs::File,
     io::{Cursor, Read},
 };
 
