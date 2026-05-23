@@ -10,6 +10,8 @@ jobs:
       run:
         shell: sh
     steps:
+      - name: Os Setup
+        run: sudo apt update && sudo apt install mold
       - name: Setup rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
 
