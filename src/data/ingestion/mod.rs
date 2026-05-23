@@ -1,13 +1,30 @@
 use self::internet_zip_ingestion::ZipIngestion;
 use ndarray::Array1;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 mod internet_zip_ingestion;
+
+fn deserialize_f64_or_na<'de, D>(deserializer: D) -> Result<f64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s: Option<String> = Option::deserialize(deserializer)?;
+    match s {
+        Some(val) => {
+            if val == "#N/A" || val.trim().is_empty() {
+                Ok(f64::NAN)
+            } else {
+                val.replace(",", "").parse::<f64>().map_err(serde::de::Error::custom)
+            }
+        }
+        None => Ok(f64::NAN),
+    }
+}
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GoldRecord {
     #[serde(rename = "Date")]
     pub date: String,
-    #[serde(rename = "INR")]
+    #[serde(rename = "INR", deserialize_with = "deserialize_f64_or_na")]
     pub inr: f64,
 }
 
