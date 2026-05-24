@@ -1,7 +1,6 @@
 use gtk4::{Application, ApplicationWindow, DrawingArea, prelude::*};
 use plotters::prelude::*;
 use plotters_cairo::CairoBackend;
-use polars::prelude::*;
 
 pub fn init_visulization() {
     let app = gtk4::Application::new(
@@ -26,28 +25,26 @@ fn build_app(app: &Application) {
         let root = backend.into_drawing_area();
         root.fill(&WHITE).unwrap();
 
-        // Read the parquet file
-        let df = match LazyFrame::scan_parquet("output.parquet".into(), Default::default()) {
-            Ok(lf) => lf.collect().unwrap_or_else(|_| DataFrame::empty()),
-            Err(_) => DataFrame::empty(),
-        };
-
-        let col_names = df.get_column_names();
-        if col_names.len() < 2 {
-            return;
-        }
-
-        // Assume the second column is the price
-        let price_col_name = col_names[1];
-        let price_series = df.column(price_col_name).unwrap().cast(&DataType::String).unwrap();
-        
-        let prices: Vec<f64> = match price_series.str() {
-            Ok(ca) => ca.into_iter()
-                .flatten()
-                .filter_map(|s| s.replace(',', "").parse::<f64>().ok())
-                .collect(),
+        // Read the csv file
+        let file = match std::fs::File::open("data.csv") {
+            Ok(f) => f,
             Err(_) => return,
         };
+        let mut rdr = csv::Reader::from_reader(file);
+
+        let mut prices: Vec<f64> = Vec::new();
+        for result in rdr.records() {
+            if let Ok(record) = result {
+                // Assume the second column is the price
+                if let Some(price_str) = record.get(1) {
+                    if let Ok(price) = price_str.parse::<f64>() {
+                        if !price.is_nan() {
+                            prices.push(price);
+                        }
+                    }
+                }
+            }
+        }
 
         if prices.is_empty() {
             return;
