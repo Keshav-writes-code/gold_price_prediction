@@ -5,3 +5,4 @@
 [alias]
 viz = "run --features visualization -- -v"
 pull = "run -- -p"
+train = "run -- -t"

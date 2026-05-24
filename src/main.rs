@@ -28,5 +28,7 @@ fn main() {
         // logic to visualize data
         gold_price_prediction::data::visulization::init_visulization();
     }
-    if inputs.train {}
+    if inputs.train {
+        gold_price_prediction::models::train();
+    }
 }
