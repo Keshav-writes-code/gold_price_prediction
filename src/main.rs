@@ -15,6 +15,10 @@ struct Input {
     /// pull_and_store_data
     #[argh(switch, short = 'p')]
     pull: bool,
+
+    /// serve the model
+    #[argh(switch, short = 's')]
+    serve: bool,
 }
 
 fn main() {
@@ -30,5 +34,8 @@ fn main() {
     }
     if inputs.train {
         gold_price_prediction::models::train();
+    }
+    if inputs.serve {
+        gold_price_prediction::serving::serve();
     }
 }

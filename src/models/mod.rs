@@ -6,6 +6,7 @@ use linfa::{
     prelude::SingleTargetRegression,
     traits::{Fit, Predict},
 };
+use linfa_linear::FittedLinearRegression;
 use ndarray::{Array1, Array2};
 use tracing::{debug, error, info};
 
@@ -14,7 +15,14 @@ use crate::data::ingestion::GoldRecord;
 pub fn train() {
     tracing_subscriber::fmt::init();
     let dataset = get_training_data().expect("Got a Problem while reading data");
+    let model = get_trained_model(dataset);
+    let model_file = File::create("gold_price_prediction.json").expect("Cannot create model");
+    serde_json::to_writer(model_file, &model).expect("Cannot create Model File");
+}
 
+fn get_trained_model(
+    dataset: DatasetBase<Array2<f64>, Array1<f64>>,
+) -> FittedLinearRegression<f64> {
     let model = linfa_linear::LinearRegression::default()
         .fit(&dataset)
         .expect("Cannot train");
@@ -24,7 +32,8 @@ pub fn train() {
         .mean_squared_error(&dataset)
         .expect("Cannot cvalucalte MSE");
 
-    info!(r2_score = r2, rmse = mse.sqrt(), "Model Evaluation Metrics")
+    info!(r2_score = r2, rmse = mse.sqrt(), "Model Evaluation Metrics");
+    model
 }
 fn get_training_data() -> Result<DatasetBase<Array2<f64>, Array1<f64>>, &'static str> {
     info!("Loading data from CSV...");
