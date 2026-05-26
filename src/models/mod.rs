@@ -1,6 +1,11 @@
 use std::fs::File;
 
 use csv::Reader;
+use linfa::{
+    Dataset, DatasetBase,
+    prelude::SingleTargetRegression,
+    traits::{Fit, Predict},
+};
 use ndarray::{Array1, Array2};
 use tracing::{debug, error, info};
 
@@ -8,7 +13,20 @@ use crate::data::ingestion::GoldRecord;
 
 pub fn train() {
     tracing_subscriber::fmt::init();
+    let dataset = get_training_data().expect("Got a Problem while reading data");
 
+    let model = linfa_linear::LinearRegression::default()
+        .fit(&dataset)
+        .expect("Cannot train");
+    let pred = model.predict(&dataset);
+    let r2 = pred.r2(&dataset).expect("Cannot calculate r2");
+    let mse = pred
+        .mean_squared_error(&dataset)
+        .expect("Cannot cvalucalte MSE");
+
+    info!(r2_score = r2, rmse = mse.sqrt(), "Model Evaluation Metrics")
+}
+fn get_training_data() -> Result<DatasetBase<Array2<f64>, Array1<f64>>, &'static str> {
     info!("Loading data from CSV...");
     let file = File::open("data.csv").expect("cannot open Dataset CSV");
     let mut reader = Reader::from_reader(file);
@@ -33,7 +51,7 @@ pub fn train() {
             required = window_size,
             "Not enough sample to create even one window!"
         );
-        return;
+        return Err("Not enough sample to create even one window!");
     } else {
         debug!("Creating Traning data")
     }
@@ -57,4 +75,7 @@ pub fn train() {
         y_shape = ?y_train.shape(),
         "Successfully Created traning dataset"
     );
+    let dataset = Dataset::new(x_train, y_train);
+
+    Ok(dataset)
 }
