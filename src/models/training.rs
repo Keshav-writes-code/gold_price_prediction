@@ -15,7 +15,7 @@ pub struct SerealizedDataset {
     pub targets: Array1<f64>,
 }
 
-struct DataLoader {
+pub struct DataLoader {
     dataset_file_path: String,
 }
 
@@ -49,9 +49,9 @@ impl DataLoader {
         RawData { prices, dates }
     }
 }
-struct RawData {
-    prices: Vec<f64>,
-    dates: Vec<i64>,
+pub struct RawData {
+    pub prices: Vec<f64>,
+    pub dates: Vec<i64>,
 }
 impl RawData {
     pub fn build_features(self, window_size: usize) -> Result<TrainingData, &'static str> {
@@ -100,19 +100,6 @@ struct TrainingData {
 }
 
 impl TrainingData {
-    pub fn save(self, path: &str) -> Self {
-        info!("Saving preapred Data to {}...", path);
-
-        let dataset = SerealizedDataset {
-            records: self.dataset.records.clone(),
-            targets: self.dataset.targets.clone(),
-        };
-
-        let file = File::create(path).expect("Cannot create file");
-        serde_json::to_writer(file, &dataset).expect("cannot serelize data");
-
-        self
-    }
     pub fn train_model(self) -> PricePredictionModel {
         let model = linfa_linear::LinearRegression::default()
             .fit(&self.dataset)
@@ -138,7 +125,6 @@ pub fn train() {
         .load()
         .build_features(100)
         .expect("cannot create features")
-        .save("new_data.csv")
         .train_model()
         .save("trained_model.json");
 }

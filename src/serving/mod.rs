@@ -1,11 +1,12 @@
 use actix_web::{App, HttpResponse, HttpServer, Responder, get, web};
 use serde::{Deserialize, Serialize};
+use tracing::info;
 
 use crate::models::infrence::PricePredictionModelInfrence;
 
 #[derive(Deserialize)]
 struct PredictionReq {
-    pub unix_time: usize,
+    pub target_time_unix: i64,
 }
 
 #[derive(Serialize)]
@@ -15,8 +16,11 @@ struct PredictionResponse {
 
 #[actix_web::main]
 pub async fn serve() {
+    tracing_subscriber::fmt::init();
     let model = PricePredictionModelInfrence::default();
     let model_arc = web::Data::new(model);
+
+    info!("Serving the prediction at http://0.0.0.0:8080/predict");
     HttpServer::new(move || App::new().app_data(model_arc.clone()).service(predict))
         .bind(("0.0.0.0", 8080))
         .expect("cannot connect to Socket")
@@ -32,7 +36,8 @@ async fn predict(
 ) -> impl Responder {
     let req_data = req.into_inner();
 
-    let pred = model.predict(req_data.unix_time);
+    info!("Serving the prediction at http://0.0.0.0:8080/predict");
+    let pred = model.predict(req_data.target_time_unix);
     HttpResponse::Ok().json(PredictionResponse {
         predicted_price: pred,
     })
