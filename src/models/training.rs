@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use csv::{Reader, Writer};
+use csv::Reader;
 use linfa::{Dataset, DatasetBase, traits::Fit};
 use linfa_linear::FittedLinearRegression;
 use ndarray::{Array1, Array2};
