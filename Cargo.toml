@@ -20,6 +20,7 @@ tracing-subscriber = "0.3.23"
 serde_json = "1.0.150"
 actix-web = "4.13.0"
 chrono = "0.4.44"
+actix-cors = "0.7.1"
 
 [features]
 default = []
