@@ -33,7 +33,7 @@ fn main() {
         gold_price_prediction::data::visulization::init_visulization();
     }
     if inputs.train {
-        gold_price_prediction::models::train();
+        gold_price_prediction::models::training::train();
     }
     if inputs.serve {
         gold_price_prediction::serving::serve();
