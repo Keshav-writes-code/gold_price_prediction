@@ -1,10 +1,14 @@
-use std::{collections::BTreeMap, fs::File, sync::RwLock};
+use std::{collections::BTreeMap, sync::RwLock};
 
 use linfa::traits::Predict;
 use linfa_linear::FittedLinearRegression;
 use ndarray::Array2;
 
-use crate::models::training::{DataLoader, RawData};
+use crate::{
+    config::open_artifact,
+    data::ingestion::RAW_DATA_PATH,
+    models::training::{DataLoader, MODEL_PATH, RawData},
+};
 
 pub struct PricePredictionModelInfrence {
     dataset_traning: RawData,
@@ -13,11 +17,11 @@ pub struct PricePredictionModelInfrence {
 }
 impl Default for PricePredictionModelInfrence {
     fn default() -> Self {
-        let file = File::open("gold_price_prediction.json").expect("Cannot Open File");
+        let file = open_artifact(MODEL_PATH);
         let model: FittedLinearRegression<f64> =
             serde_json::from_reader(file).expect("cannot load model");
 
-        let dataset_training = DataLoader::new("data.csv").load();
+        let dataset_training = DataLoader::new(RAW_DATA_PATH).load();
 
         Self {
             dataset_traning: dataset_training,

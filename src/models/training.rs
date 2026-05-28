@@ -4,10 +4,12 @@ use linfa::{Dataset, DatasetBase, traits::Fit};
 use linfa_linear::FittedLinearRegression;
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize};
-use std::fs::File;
 use tracing::{debug, error, info};
 
-use crate::data::ingestion::GoldRecord;
+use crate::{
+    config::{create_artifact, open_artifact},
+    data::ingestion::{GoldRecord, RAW_DATA_PATH},
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct SerealizedDataset {
@@ -16,18 +18,18 @@ pub struct SerealizedDataset {
 }
 
 pub struct DataLoader {
-    dataset_file_path: String,
+    db_artifact_file_path: String,
 }
 
 impl DataLoader {
     pub fn new(file_path: &str) -> Self {
         Self {
-            dataset_file_path: file_path.to_string(),
+            db_artifact_file_path: file_path.to_string(),
         }
     }
     pub fn load(self) -> RawData {
         info!("Loading data from CSV...");
-        let file = File::open(self.dataset_file_path).expect("cannot open Dataset CSV");
+        let file = open_artifact(&self.db_artifact_file_path);
         let mut reader = Reader::from_reader(file);
 
         let mut prices = Vec::new();
@@ -113,18 +115,20 @@ struct PricePredictionModel {
 }
 impl PricePredictionModel {
     pub fn save(self, path: &str) -> Self {
-        let model_file = File::create(path).expect("Cannot create model");
+        let model_file = create_artifact(path);
         serde_json::to_writer(model_file, &self.model).expect("Cannot create Model file");
         self
     }
 }
 
+pub const MODEL_PATH: &str = "trained_model.json";
+
 pub fn train() {
     tracing_subscriber::fmt::init();
-    DataLoader::new("data.csv")
+    DataLoader::new(RAW_DATA_PATH)
         .load()
         .build_features(100)
         .expect("cannot create features")
         .train_model()
-        .save("trained_model.json");
+        .save(MODEL_PATH);
 }

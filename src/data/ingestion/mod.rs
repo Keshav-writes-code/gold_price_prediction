@@ -1,3 +1,5 @@
+use crate::config::create_artifact;
+
 use self::internet_zip_ingestion::ZipIngestion;
 use ndarray::Array1;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -32,7 +34,7 @@ pub trait IngestionStratergy {
     fn fetch_data(&self) -> Vec<GoldRecord>;
 }
 
-pub const FEATURE_STORE_PATH: &str = "data.csv";
+pub const RAW_DATA_PATH: &str = "raw_data.csv";
 
 pub fn hanlde_ingestion() -> Array1<f64> {
     let stratergies: Vec<Box<dyn IngestionStratergy>> = vec![Box::new(ZipIngestion)];
@@ -41,7 +43,9 @@ pub fn hanlde_ingestion() -> Array1<f64> {
     for stratergy in stratergies {
         all_records.extend(stratergy.fetch_data());
     }
-    let mut writer = csv::Writer::from_path(FEATURE_STORE_PATH).expect("Error cann't init writer");
+
+    let file = create_artifact(RAW_DATA_PATH);
+    let mut writer = csv::Writer::from_writer(file);
 
     all_records.iter().for_each(|record| {
         writer.serialize(record).expect("Failed");

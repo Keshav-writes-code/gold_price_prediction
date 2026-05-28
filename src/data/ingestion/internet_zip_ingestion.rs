@@ -1,9 +1,4 @@
-use std::{
-    fs::File,
-    io::{Cursor, Read},
-};
-
-use csv::Writer;
+use std::io::{Cursor, Read};
 
 use super::GoldRecord;
 use super::IngestionStratergy;
@@ -32,13 +27,6 @@ impl IngestionStratergy for ZipIngestion {
             .map(|r| r.unwrap())
             .collect();
 
-        let file = File::create("data.csv").expect("Cannot create csv");
-        let mut writer = Writer::from_writer(file);
-
-        for record in &records {
-            writer.serialize(record).unwrap();
-        }
-        writer.flush().unwrap();
         records
     }
 }

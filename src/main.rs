@@ -22,6 +22,7 @@ struct Input {
 }
 
 fn main() {
+    gold_price_prediction::config::init();
     let inputs: Input = argh::from_env();
     if inputs.pull {
         // logic to download data from cagle and store then in a sqlite database
