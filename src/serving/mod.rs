@@ -7,12 +7,12 @@ use crate::models::infrence::PricePredictionModelInfrence;
 
 #[derive(Deserialize)]
 struct PredictionReq {
-    pub target_time_unix: i64,
+    pub target_time_unix: Vec<i64>,
 }
 
 #[derive(Serialize)]
 struct PredictionResponse {
-    pub predicted_price: f64,
+    pub predicted_price: Vec<f64>,
 }
 
 #[actix_web::main]
@@ -44,8 +44,11 @@ async fn predict(
     let req_data = req.into_inner();
 
     info!("Serving the prediction at http://0.0.0.0:8080/predict");
-    let pred = model.predict(req_data.target_time_unix);
+    let mut predictions = Vec::new();
+    for input in req_data.target_time_unix {
+        predictions.push(model.predict(input));
+    }
     HttpResponse::Ok().json(PredictionResponse {
-        predicted_price: pred,
+        predicted_price: predictions,
     })
 }
