@@ -82,7 +82,7 @@ impl PricePredictionModelInfrence {
             .read()
             .unwrap()
             .get(&target_time)
-            .unwrap()
+            .unwrap_or(&0.0)
     }
     pub fn build_infrence_input(&self, target_time: i64) -> Vec<f64> {
         let mut features = Vec::with_capacity(99);
