@@ -97,7 +97,7 @@ impl RawData {
     }
 }
 
-struct TrainingData {
+pub struct TrainingData {
     dataset: DatasetBase<Array2<f64>, Array1<f64>>,
 }
 
@@ -110,7 +110,7 @@ impl TrainingData {
     }
 }
 
-struct PricePredictionModel {
+pub struct PricePredictionModel {
     model: FittedLinearRegression<f64>,
 }
 impl PricePredictionModel {
