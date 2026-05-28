@@ -15,7 +15,9 @@ where
             if val == "#N/A" || val.trim().is_empty() {
                 Ok(f64::NAN)
             } else {
-                val.replace(",", "").parse::<f64>().map_err(serde::de::Error::custom)
+                val.replace(",", "")
+                    .parse::<f64>()
+                    .map_err(serde::de::Error::custom)
             }
         }
         None => Ok(f64::NAN),
