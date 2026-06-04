@@ -1,5 +1,5 @@
 use actix_cors::Cors;
-use actix_web::{App, HttpResponse, HttpServer, Responder, post, web};
+use actix_web::{App, HttpResponse, HttpServer, Responder, get, post, web};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
@@ -21,6 +21,7 @@ pub async fn serve() {
     let model = PricePredictionModelInfrence::default();
     let model_arc = web::Data::new(model);
 
+    info!("Serving the WebApp at http://0.0.0.0:8080/");
     info!("Serving the prediction at http://0.0.0.0:8080/predict");
     HttpServer::new(move || {
         let cors = Cors::permissive();
@@ -28,12 +29,22 @@ pub async fn serve() {
             .app_data(model_arc.clone())
             .wrap(cors)
             .service(predict)
+            .service(index)
     })
     .bind(("0.0.0.0", 8080))
     .expect("cannot connect to Socket")
     .run()
     .await
     .expect("cannot run server");
+}
+
+const DASHBOARD_HTML: &str = include_str!("./static/index.html");
+
+#[get("/")]
+async fn index() -> impl Responder {
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(DASHBOARD_HTML)
 }
 
 #[post("/predict")]

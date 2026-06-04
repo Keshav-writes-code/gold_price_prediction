@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gold Price Prediction — Dashboard</title>
+<meta name="description" content="Interactive gold price prediction dashboard powered by machine learning."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0c10;
+  --surface:#13151a;
+  --surface-2:#1a1d25;
+  --surface-3:#22252f;
+  --border:rgba(212,175,55,.12);
+  --border-bright:rgba(212,175,55,.3);
+  --gold:#d4af37;
+  --gold-dim:#a8892c;
+  --gold-glow:rgba(212,175,55,.25);
+  --text:#e8e6e1;
+  --text-dim:#8a8880;
+  --green:#34d399;
+  --red:#f87171;
+  --radius:14px;
+}
+html{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding:24px;max-width:1280px;margin:0 auto}
+
+/* header */
+header{display:flex;align-items:center;gap:14px;margin-bottom:32px}
+.logo{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#f5d76e);display:grid;place-items:center;font-weight:700;font-size:18px;color:#0b0c10;flex-shrink:0;box-shadow:0 0 24px var(--gold-glow)}
+header h1{font-size:1.35rem;font-weight:600;letter-spacing:-.02em}
+header p{font-size:.8rem;color:var(--text-dim);margin-top:2px}
+
+/* stat cards */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;transition:border-color .3s,box-shadow .3s}
+.stat-card:hover{border-color:var(--gold-dim);box-shadow:0 0 20px var(--gold-glow)}
+.stat-card .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:6px}
+.stat-card .value{font-size:1.45rem;font-weight:700;font-variant-numeric:tabular-nums}
+.stat-card .sub{font-size:.72rem;margin-top:4px}
+.up{color:var(--green)} .down{color:var(--red)}
+
+/* chart */
+.chart-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:28px}
+.chart-panel h2{font-size:.95rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.chart-panel h2::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold-glow)}
+.chart-wrap{position:relative;height:420px}
+
+/* controls */
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;display:flex;flex-wrap:wrap;align-items:end;gap:16px;margin-bottom:28px}
+
+/* ── Date Picker ── */
+.dp-field{display:flex;flex-direction:column;gap:6px;position:relative}
+.dp-field .dp-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);display:flex;align-items:center;gap:6px}
+.dp-trigger{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:10px;
+  padding:12px 16px;color:var(--text);font-family:'Inter',system-ui,sans-serif;
+  font-size:.88rem;font-weight:500;outline:none;cursor:pointer;
+  min-width:190px;display:flex;align-items:center;gap:10px;
+  transition:border-color .3s, box-shadow .3s, background .3s;
+  user-select:none;
+}
+.dp-trigger:hover{border-color:var(--gold-dim);background:#1f222c}
+.dp-trigger.active{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow), 0 4px 16px rgba(212,175,55,.1);background:#1f222c}
+.dp-trigger svg{width:18px;height:18px;fill:var(--gold-dim);flex-shrink:0}
+.dp-trigger .dp-text{flex:1}
+.dp-trigger .dp-chevron{width:12px;height:12px;fill:var(--text-dim);transition:transform .25s}
+.dp-trigger.active .dp-chevron{transform:rotate(180deg)}
+
+/* calendar popup */
+.dp-popup{
+  position:absolute;top:calc(100% + 8px);left:0;z-index:100;
+  background:var(--surface);border:1px solid var(--border-bright);
+  border-radius:16px;padding:16px;min-width:300px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 40px rgba(212,175,55,.08);
+  opacity:0;transform:translateY(-8px) scale(.97);
+  pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease;
+}
+.dp-popup.open{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+.dp-popup::before{
+  content:'';position:absolute;top:-6px;left:24px;
+  width:12px;height:12px;background:var(--surface);
+  border-left:1px solid var(--border-bright);border-top:1px solid var(--border-bright);
+  transform:rotate(45deg);
+}
+
+.dp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.dp-month-year{
+  font-size:.92rem;font-weight:600;color:var(--text);letter-spacing:-.01em;
+  cursor:pointer;padding:4px 10px;border-radius:8px;transition:all .2s;
+  user-select:none;
+}
+.dp-month-year:hover{background:var(--surface-3);color:var(--gold)}
+.dp-nav{display:flex;gap:4px}
+.dp-nav button{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface-2);color:var(--text-dim);cursor:pointer;
+  display:grid;place-items:center;transition:all .2s;font-size:14px;
+  font-family:'Inter',sans-serif;
+}
+.dp-nav button:hover{border-color:var(--gold-dim);color:var(--gold);background:var(--surface-3)}
+.dp-nav button.dp-year-jump{font-size:11px;font-weight:700;letter-spacing:-.05em}
+
+/* month & year grid views */
+.dp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dp-grid-cell{
+  padding:12px 8px;border-radius:10px;border:1px solid transparent;
+  background:var(--surface-2);color:var(--text);font-family:'Inter',sans-serif;
+  font-size:.82rem;font-weight:500;cursor:pointer;text-align:center;
+  transition:all .2s;
+}
+.dp-grid-cell:hover{border-color:var(--gold-dim);color:var(--gold);background:var(--surface-3)}
+.dp-grid-cell.current{color:var(--gold);font-weight:700;border-color:var(--border-bright)}
+.dp-grid-cell.selected-cell{
+  background:linear-gradient(135deg,var(--gold),#c9a227);
+  color:#0b0c10;font-weight:700;border-color:transparent;
+  box-shadow:0 2px 12px var(--gold-glow);
+}
+.dp-grid-cell.selected-cell:hover{background:linear-gradient(135deg,#e0bc3f,var(--gold))}
+
+.dp-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px}
+.dp-weekdays span{text-align:center;font-size:.65rem;font-weight:600;color:var(--gold-dim);text-transform:uppercase;letter-spacing:.06em;padding:4px 0}
+
+.dp-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dp-day{
+  width:100%;aspect-ratio:1;border-radius:10px;border:none;
+  background:transparent;color:var(--text);font-family:'Inter',sans-serif;
+  font-size:.82rem;font-weight:500;cursor:pointer;
+  display:grid;place-items:center;transition:all .2s;position:relative;
+}
+.dp-day:hover{background:var(--surface-3);color:var(--gold)}
+.dp-day.other-month{color:var(--text-dim);opacity:.35}
+.dp-day.other-month:hover{opacity:.6}
+.dp-day.today{color:var(--gold);font-weight:700}
+.dp-day.today::after{
+  content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--gold);
+}
+.dp-day.selected{
+  background:linear-gradient(135deg,var(--gold),#c9a227);
+  color:#0b0c10;font-weight:700;
+  box-shadow:0 2px 12px var(--gold-glow);
+}
+.dp-day.selected::after{display:none}
+.dp-day.selected:hover{background:linear-gradient(135deg,#e0bc3f,var(--gold))}
+
+/* quick presets */
+.dp-presets{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
+.dp-preset{
+  font-size:.68rem;padding:5px 10px;border-radius:6px;
+  background:var(--surface-2);border:1px solid var(--border);
+  color:var(--text-dim);cursor:pointer;transition:all .2s;
+  font-family:'Inter',sans-serif;font-weight:500;
+}
+.dp-preset:hover{border-color:var(--gold-dim);color:var(--gold);background:var(--surface-3)}
+
+/* arrow between dates */
+.date-arrow{display:flex;align-items:center;align-self:end;margin-bottom:12px}
+.date-arrow svg{width:28px;height:28px;stroke:var(--gold-dim);stroke-width:1.5;fill:none;opacity:.4}
+
+button.predict-btn{
+  background:linear-gradient(135deg,var(--gold),#c9a227);
+  color:#0b0c10;font-weight:600;font-size:.85rem;
+  padding:12px 32px;border:none;border-radius:10px;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  display:flex;align-items:center;gap:8px;
+}
+button.predict-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px var(--gold-glow)}
+button.predict-btn:active{transform:translateY(0)}
+button.predict-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* spinner */
+.spinner{display:none;width:16px;height:16px;border:2px solid transparent;border-top-color:#0b0c10;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:.82rem;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.45);transform:translateY(120%);opacity:0;transition:transform .35s ease,opacity .35s ease;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.error{border-color:var(--red)}
+
+footer{text-align:center;color:var(--text-dim);font-size:.72rem;padding:16px 0;border-top:1px solid var(--border);margin-top:12px}
+
+@media(max-width:640px){
+  body{padding:14px}
+  .chart-wrap{height:280px}
+  .controls{flex-direction:column;align-items:stretch}
+  button.predict-btn{width:100%;justify-content:center}
+  .date-arrow{justify-content:center}
+  .dp-popup{left:-16px;right:-16px;min-width:unset}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Au</div>
+  <div>
+    <h1>Gold Price Prediction</h1>
+    <p>Linear-regression model · Historical INR prices</p>
+  </div>
+</header>
+
+<section class="stats">
+  <div class="stat-card">
+    <div class="label">Latest Price</div>
+    <div class="value" id="stat-latest">—</div>
+    <div class="sub" id="stat-date"></div>
+  </div>
+  <div class="stat-card">
+    <div class="label">All-Time High</div>
+    <div class="value" id="stat-high">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">All-Time Low</div>
+    <div class="value" id="stat-low">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Data Points</div>
+    <div class="value" id="stat-count">—</div>
+  </div>
+</section>
+
+<section class="chart-panel">
+  <h2>Price History &amp; Forecast</h2>
+  <div class="chart-wrap">
+    <canvas id="priceChart"></canvas>
+  </div>
+</section>
+
+<section class="controls">
+  <!-- Start date picker -->
+  <div class="dp-field" id="dpStartWrap">
+    <span class="dp-label">Forecast From</span>
+    <div class="dp-trigger" id="dpStartTrigger" tabindex="0">
+      <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg>
+      <span class="dp-text" id="dpStartText">Select date</span>
+      <svg class="dp-chevron" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="dp-popup" id="dpStartPopup"></div>
+    <input type="hidden" id="startDate"/>
+  </div>
+
+  <div class="date-arrow">
+    <svg viewBox="0 0 24 24"><polyline points="5 12 19 12"/><polyline points="14 7 19 12 14 17"/></svg>
+  </div>
+
+  <!-- End date picker -->
+  <div class="dp-field" id="dpEndWrap">
+    <span class="dp-label">Forecast To</span>
+    <div class="dp-trigger" id="dpEndTrigger" tabindex="0">
+      <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg>
+      <span class="dp-text" id="dpEndText">Select date</span>
+      <svg class="dp-chevron" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="dp-popup" id="dpEndPopup"></div>
+    <input type="hidden" id="endDate"/>
+  </div>
+
+  <button class="predict-btn" id="predictBtn" onclick="fetchPredictions()">
+    Predict <span class="spinner" id="spinner"></span>
+  </button>
+</section>
+
+<footer>Gold Price Prediction · Rust + Actix-Web + linfa</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = '';
+const INR = new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0});
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+let chart;
+let historicalDates = [];
+let historicalPrices = [];
+
+function showToast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+function tsToDate(ts){ return new Date(ts * 1000); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmtISO(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function fmtDisplay(d){ return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)} ${d.getFullYear()}`; }
+function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+/* ═══════════════════════════════════════════════
+   Custom Date Picker
+   ═══════════════════════════════════════════════ */
+class GoldDatePicker {
+  constructor(wrapperId, triggerId, popupId, hiddenId, textId, presets){
+    this.wrap = document.getElementById(wrapperId);
+    this.trigger = document.getElementById(triggerId);
+    this.popup = document.getElementById(popupId);
+    this.hidden = document.getElementById(hiddenId);
+    this.textEl = document.getElementById(textId);
+    this.presets = presets || [];
+    this.viewing = new Date();
+    this.selected = null;
+    this.open = false;
+    this.viewMode = 'days'; // 'days' | 'months' | 'years'
+
+    this.trigger.addEventListener('click', () => this.toggle());
+    this.trigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.toggle(); }
+      if (e.key === 'Escape') this.close();
+    });
+  }
+
+  toggle(){ this.open ? this.close() : this.show(); }
+
+  show(){
+    document.querySelectorAll('.dp-popup.open').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.dp-trigger.active').forEach(t => t.classList.remove('active'));
+    this.open = true;
+    this.viewMode = 'days';
+    this.trigger.classList.add('active');
+    this.render();
+    requestAnimationFrame(() => this.popup.classList.add('open'));
+  }
+
+  close(){
+    this.open = false;
+    this.viewMode = 'days';
+    this.popup.classList.remove('open');
+    this.trigger.classList.remove('active');
+  }
+
+  select(date){
+    this.selected = date;
+    this.hidden.value = fmtISO(date);
+    this.textEl.textContent = fmtDisplay(date);
+    this.render();
+    setTimeout(() => this.close(), 180);
+  }
+
+  setDate(date){
+    this.selected = date;
+    this.viewing = new Date(date);
+    this.hidden.value = fmtISO(date);
+    this.textEl.textContent = fmtDisplay(date);
+  }
+
+  prevMonth(){ this.viewing.setMonth(this.viewing.getMonth() - 1); this.render(); }
+  nextMonth(){ this.viewing.setMonth(this.viewing.getMonth() + 1); this.render(); }
+  prevYear(){ this.viewing.setFullYear(this.viewing.getFullYear() - 1); this.render(); }
+  nextYear(){ this.viewing.setFullYear(this.viewing.getFullYear() + 1); this.render(); }
+
+  // decade for year grid: floor to nearest 10
+  get decadeStart(){ return Math.floor(this.viewing.getFullYear() / 10) * 10; }
+  prevDecade(){ this.viewing.setFullYear(this.viewing.getFullYear() - 10); this.render(); }
+  nextDecade(){ this.viewing.setFullYear(this.viewing.getFullYear() + 10); this.render(); }
+
+  cycleView(){
+    if (this.viewMode === 'days') this.viewMode = 'months';
+    else if (this.viewMode === 'months') this.viewMode = 'years';
+    else this.viewMode = 'days';
+    this.render();
+  }
+
+  /* ── render dispatcher ── */
+  render(){
+    if (this.viewMode === 'years') this.renderYears();
+    else if (this.viewMode === 'months') this.renderMonths();
+    else this.renderDays();
+  }
+
+  /* ── YEAR GRID (decade view) ── */
+  renderYears(){
+    const start = this.decadeStart;
+    const today = new Date();
+    const selYear = this.selected ? this.selected.getFullYear() : null;
+
+    let html = `
+      <div class="dp-header">
+        <span class="dp-month-year" title="Back to months">${start} – ${start + 11}</span>
+        <div class="dp-nav">
+          <button type="button" class="dp-prev-decade" title="Previous decade">«</button>
+          <button type="button" class="dp-next-decade" title="Next decade">»</button>
+        </div>
+      </div>
+      <div class="dp-grid">`;
+
+    for (let i = 0; i < 12; i++){
+      const y = start + i;
+      const isCurrent = y === today.getFullYear() ? ' current' : '';
+      const isSel = y === selYear ? ' selected-cell' : '';
+      html += `<button type="button" class="dp-grid-cell${isCurrent}${isSel}" data-year="${y}">${y}</button>`;
+    }
+    html += '</div>';
+    this.popup.innerHTML = html;
+
+    this.popup.querySelector('.dp-month-year').addEventListener('click', (e) => { e.stopPropagation(); this.cycleView(); });
+    this.popup.querySelector('.dp-prev-decade').addEventListener('click', (e) => { e.stopPropagation(); this.prevDecade(); });
+    this.popup.querySelector('.dp-next-decade').addEventListener('click', (e) => { e.stopPropagation(); this.nextDecade(); });
+    this.popup.querySelectorAll('.dp-grid-cell').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.viewing.setFullYear(parseInt(btn.dataset.year));
+        this.viewMode = 'months';
+        this.render();
+      });
+    });
+  }
+
+  /* ── MONTH GRID ── */
+  renderMonths(){
+    const year = this.viewing.getFullYear();
+    const today = new Date();
+    const selMonth = this.selected ? this.selected.getMonth() : -1;
+    const selYear = this.selected ? this.selected.getFullYear() : -1;
+
+    let html = `
+      <div class="dp-header">
+        <span class="dp-month-year" title="Pick a year">${year}</span>
+        <div class="dp-nav">
+          <button type="button" class="dp-prev-yr" title="Previous year">«</button>
+          <button type="button" class="dp-next-yr" title="Next year">»</button>
+        </div>
+      </div>
+      <div class="dp-grid">`;
+
+    const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    for (let m = 0; m < 12; m++){
+      const isCurrent = (m === today.getMonth() && year === today.getFullYear()) ? ' current' : '';
+      const isSel = (m === selMonth && year === selYear) ? ' selected-cell' : '';
+      html += `<button type="button" class="dp-grid-cell${isCurrent}${isSel}" data-month="${m}">${SHORT_MONTHS[m]}</button>`;
+    }
+    html += '</div>';
+    this.popup.innerHTML = html;
+
+    this.popup.querySelector('.dp-month-year').addEventListener('click', (e) => { e.stopPropagation(); this.viewMode = 'years'; this.render(); });
+    this.popup.querySelector('.dp-prev-yr').addEventListener('click', (e) => { e.stopPropagation(); this.viewing.setFullYear(year - 1); this.render(); });
+    this.popup.querySelector('.dp-next-yr').addEventListener('click', (e) => { e.stopPropagation(); this.viewing.setFullYear(year + 1); this.render(); });
+    this.popup.querySelectorAll('.dp-grid-cell').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.viewing.setMonth(parseInt(btn.dataset.month));
+        this.viewMode = 'days';
+        this.render();
+      });
+    });
+  }
+
+  /* ── DAY GRID (original calendar) ── */
+  renderDays(){
+    const year = this.viewing.getFullYear();
+    const month = this.viewing.getMonth();
+    const today = new Date();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrev = new Date(year, month, 0).getDate();
+
+    let html = `
+      <div class="dp-header">
+        <span class="dp-month-year" title="Pick month / year">${MONTHS[month]} ${year}</span>
+        <div class="dp-nav">
+          <button type="button" class="dp-year-jump dp-prev-yr" title="Previous year">«</button>
+          <button type="button" class="dp-prev" title="Previous month">‹</button>
+          <button type="button" class="dp-next" title="Next month">›</button>
+          <button type="button" class="dp-year-jump dp-next-yr" title="Next year">»</button>
+        </div>
+      </div>
+      <div class="dp-weekdays">${DAYS.map(d => `<span>${d}</span>`).join('')}</div>
+      <div class="dp-days">`;
+
+    // previous month trailing days
+    for (let i = firstDay - 1; i >= 0; i--){
+      const day = daysInPrev - i;
+      const d = new Date(year, month - 1, day);
+      const sel = this.selected && sameDay(d, this.selected) ? ' selected' : '';
+      html += `<button type="button" class="dp-day other-month${sel}" data-date="${fmtISO(d)}">${day}</button>`;
+    }
+
+    // current month
+    for (let day = 1; day <= daysInMonth; day++){
+      const d = new Date(year, month, day);
+      const isToday = sameDay(d, today) ? ' today' : '';
+      const sel = this.selected && sameDay(d, this.selected) ? ' selected' : '';
+      html += `<button type="button" class="dp-day${isToday}${sel}" data-date="${fmtISO(d)}">${day}</button>`;
+    }
+
+    // next month leading days
+    const totalCells = firstDay + daysInMonth;
+    const remaining = (7 - (totalCells % 7)) % 7;
+    for (let day = 1; day <= remaining; day++){
+      const d = new Date(year, month + 1, day);
+      const sel = this.selected && sameDay(d, this.selected) ? ' selected' : '';
+      html += `<button type="button" class="dp-day other-month${sel}" data-date="${fmtISO(d)}">${day}</button>`;
+    }
+
+    html += '</div>';
+
+    // presets
+    if (this.presets.length > 0){
+      html += '<div class="dp-presets">';
+      this.presets.forEach(p => {
+        html += `<button type="button" class="dp-preset" data-offset="${p.offset}">${p.label}</button>`;
+      });
+      html += '</div>';
+    }
+
+    this.popup.innerHTML = html;
+
+    // event listeners
+    this.popup.querySelector('.dp-month-year').addEventListener('click', (e) => { e.stopPropagation(); this.cycleView(); });
+    this.popup.querySelector('.dp-prev').addEventListener('click', (e) => { e.stopPropagation(); this.prevMonth(); });
+    this.popup.querySelector('.dp-next').addEventListener('click', (e) => { e.stopPropagation(); this.nextMonth(); });
+    this.popup.querySelector('.dp-prev-yr').addEventListener('click', (e) => { e.stopPropagation(); this.prevYear(); });
+    this.popup.querySelector('.dp-next-yr').addEventListener('click', (e) => { e.stopPropagation(); this.nextYear(); });
+    this.popup.querySelectorAll('.dp-day').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const parts = btn.dataset.date.split('-');
+        this.select(new Date(+parts[0], +parts[1]-1, +parts[2]));
+      });
+    });
+    this.popup.querySelectorAll('.dp-preset').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const d = new Date();
+        d.setDate(d.getDate() + parseInt(btn.dataset.offset));
+        this.viewing = new Date(d);
+        this.select(d);
+      });
+    });
+  }
+}
+
+/* ── init pickers ── */
+let dpStart, dpEnd;
+document.addEventListener('DOMContentLoaded', () => {
+  dpStart = new GoldDatePicker('dpStartWrap','dpStartTrigger','dpStartPopup','startDate','dpStartText', [
+    { label: 'Today', offset: 0 },
+    { label: 'Tomorrow', offset: 1 },
+    { label: '+7 days', offset: 7 },
+    { label: '+30 days', offset: 30 },
+  ]);
+  dpEnd = new GoldDatePicker('dpEndWrap','dpEndTrigger','dpEndPopup','endDate','dpEndText', [
+    { label: '+30 days', offset: 30 },
+    { label: '+90 days', offset: 90 },
+    { label: '+180 days', offset: 180 },
+    { label: '+1 year', offset: 365 },
+  ]);
+
+  // set defaults
+  setDefaultDates();
+  initChart();
+  loadHistorical();
+
+  // close picker when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#dpStartWrap')) dpStart.close();
+    if (!e.target.closest('#dpEndWrap')) dpEnd.close();
+  });
+});
+
+function setDefaultDates(){
+  const today = new Date();
+  const future = new Date(today);
+  future.setDate(future.getDate() + 90);
+
+  if (historicalDates.length > 0) {
+    const last = historicalDates[historicalDates.length - 1];
+    const from = new Date((last + 86400) * 1000);
+    const to   = new Date((last + 86400 * 90) * 1000);
+    dpStart.setDate(from);
+    dpEnd.setDate(to);
+  } else {
+    dpStart.setDate(today);
+    dpEnd.setDate(future);
+  }
+}
+
+async function loadHistorical(){
+  try {
+    const res = await fetch(API_BASE + '/api/historical');
+    if (!res.ok) throw new Error('Failed to load data');
+    const data = await res.json();
+    historicalDates = data.dates;
+    historicalPrices = data.prices;
+    populateStats();
+    updateChartWithHistory();
+    setDefaultDates();
+  } catch(e) {
+    showToast('Historical data unavailable — predictions still work', true);
+    console.error(e);
+  }
+}
+
+/* ── stats ── */
+function populateStats(){
+  const n = historicalPrices.length;
+  if (n < 2) return;
+  const latest = historicalPrices[n - 1];
+  const prev = historicalPrices[n - 2];
+  const high = Math.max(...historicalPrices);
+  const low  = Math.min(...historicalPrices.filter(p => p > 0));
+
+  document.getElementById('stat-latest').textContent = INR.format(latest);
+  const diff = ((latest - prev) / prev * 100).toFixed(2);
+  const cls = diff >= 0 ? 'up' : 'down';
+  const arrow = diff >= 0 ? '▲' : '▼';
+  document.getElementById('stat-date').innerHTML =
+    `<span class="${cls}">${arrow} ${Math.abs(diff)}% vs prior</span>`;
+  document.getElementById('stat-high').textContent = INR.format(high);
+  document.getElementById('stat-low').textContent  = INR.format(low);
+  document.getElementById('stat-count').textContent = n.toLocaleString();
+}
+
+/* ── chart ── */
+function initChart(){
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 420);
+  grad.addColorStop(0, 'rgba(212,175,55,.28)');
+  grad.addColorStop(1, 'rgba(212,175,55,.0)');
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [{
+        label: 'Historical Price (INR)',
+        data: [],
+        borderColor: '#d4af37',
+        backgroundColor: grad,
+        borderWidth: 1.8,
+        pointRadius: 0,
+        pointHitRadius: 6,
+        fill: true,
+        tension: .3,
+        order: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: '#8a8880', font: { family: 'Inter', size: 12 }, boxWidth: 14, padding: 16 }
+        },
+        tooltip: {
+          backgroundColor: '#1a1d25ee',
+          titleColor: '#e8e6e1',
+          bodyColor: '#d4af37',
+          borderColor: 'rgba(212,175,55,.25)',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(ctx){ return '  ' + INR.format(ctx.parsed.y); }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: { unit: 'year', tooltipFormat: 'dd MMM yyyy' },
+          grid: { color: 'rgba(255,255,255,.04)' },
+          ticks: { color: '#8a8880', font: { family: 'Inter', size: 11 }, maxTicksLimit: 12 }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,.04)' },
+          ticks: { color: '#8a8880', font: { family: 'Inter', size: 11 }, callback: v => INR.format(v) }
+        }
+      }
+    }
+  });
+}
+
+function updateChartWithHistory(){
+  if (!chart || historicalDates.length === 0) return;
+  chart.data.datasets[0].data = historicalDates.map((d, i) => ({ x: tsToDate(d), y: historicalPrices[i] }));
+  chart.update();
+}
+
+/* ── fetch predictions ── */
+async function fetchPredictions(){
+  const btn  = document.getElementById('predictBtn');
+  const spin = document.getElementById('spinner');
+  const s = document.getElementById('startDate').value;
+  const e = document.getElementById('endDate').value;
+  if (!s || !e) { showToast('Pick both dates', true); return; }
+
+  const startTs = Math.floor(new Date(s + 'T00:00:00Z').getTime() / 1000);
+  const endTs   = Math.floor(new Date(e + 'T00:00:00Z').getTime() / 1000);
+  if (endTs <= startTs) { showToast('End date must be after start', true); return; }
+
+  const timestamps = [];
+  for (let t = startTs; t <= endTs; t += 86400) timestamps.push(t);
+
+  btn.disabled = true;
+  spin.style.display = 'inline-block';
+
+  try {
+    const res = await fetch(API_BASE + '/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_time_unix: timestamps })
+    });
+    if (!res.ok) throw new Error('Prediction failed');
+    const data = await res.json();
+
+    if (!data || !data.predicted_price || !Array.isArray(data.predicted_price)) {
+      throw new Error('Invalid prediction response format');
+    }
+
+    // replace old prediction layer
+    if (chart.data.datasets.length > 1) chart.data.datasets.pop();
+
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    const predGrad = ctx.createLinearGradient(0, 0, 0, 420);
+    predGrad.addColorStop(0, 'rgba(52,211,153,.22)');
+    predGrad.addColorStop(1, 'rgba(52,211,153,.0)');
+
+    chart.data.datasets.push({
+      label: 'Predicted Price (INR)',
+      data: timestamps.map((t, i) => ({ x: tsToDate(t), y: data.predicted_price[i] })),
+      borderColor: '#34d399',
+      backgroundColor: predGrad,
+      borderWidth: 2,
+      borderDash: [6, 3],
+      pointRadius: 0,
+      pointHitRadius: 6,
+      fill: true,
+      tension: .3,
+      order: 1
+    });
+    chart.update();
+    showToast(`Forecast generated · ${timestamps.length} days`);
+  } catch(err) {
+    showToast('Prediction request failed', true);
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    spin.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>
