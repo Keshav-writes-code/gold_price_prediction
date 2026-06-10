@@ -36,9 +36,7 @@ pub trait IngestionStratergy {
     fn fetch_data(&self) -> Vec<GoldRecord>;
 }
 
-pub const RAW_DATA_PATH: &str = "raw_data.csv";
-
-pub fn hanlde_ingestion() -> Array1<f64> {
+pub fn hanlde_ingestion(data_path: &str) -> Array1<f64> {
     let stratergies: Vec<Box<dyn IngestionStratergy>> = vec![Box::new(ZipIngestion)];
 
     let mut all_records = Vec::new();
@@ -46,7 +44,7 @@ pub fn hanlde_ingestion() -> Array1<f64> {
         all_records.extend(stratergy.fetch_data());
     }
 
-    let file = create_artifact(RAW_DATA_PATH);
+    let file = create_artifact(data_path);
     let mut writer = csv::Writer::from_writer(file);
 
     all_records.iter().for_each(|record| {
