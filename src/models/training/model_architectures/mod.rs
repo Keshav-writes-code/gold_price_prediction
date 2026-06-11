@@ -1,6 +1,3 @@
-mod linear_regression;
-mod mlp;
-
 use std::path::PathBuf;
 
 use crate::{
@@ -12,25 +9,50 @@ use crate::{
     },
 };
 
+mod linear_regression;
+mod mlp;
+
 pub trait Modelable {
+    fn train(&mut self, data: &TrainingData);
     fn save(&self, save_path: &PathBuf);
 }
 
-pub struct PricePredictionModel {
-    trained_model: Box<dyn Modelable>,
+enum Models {
+    LinearRegression(LR),
+    Mlp(MLP),
 }
 
-impl PricePredictionModel {
-    pub fn train(arch: &ModelArch, data: &TrainingData) -> Self {
-        Self {
-            trained_model: match arch {
-                ModelArch::LinearRegression => Box::new(LR::train(data)),
-                ModelArch::Mlp => Box::new(MLP::train(data)),
-            },
+impl Modelable for Models {
+    fn train(&mut self, data: &TrainingData) {
+        match self {
+            Models::LinearRegression(model) => model.train(data),
+            Models::Mlp(model) => model.train(data),
         }
     }
+    fn save(&self, save_path: &PathBuf) {
+        match self {
+            Models::LinearRegression(model) => model.save(save_path),
+            Models::Mlp(model) => model.save(save_path),
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct PricePredictionModel {
+    model: Option<Models>,
+}
+impl PricePredictionModel {
+    pub fn train(&mut self, arch: &ModelArch, training_data: &TrainingData) -> &Self {
+        let mut model: Models = match arch {
+            ModelArch::LinearRegression => Models::LinearRegression(LR::default()),
+            ModelArch::Mlp => Models::Mlp(MLP::default()),
+        };
+        model.train(training_data);
+        self.model = Some(model);
+        self
+    }
     pub fn save(&self, path: &str) {
-        let model_path = create_artifact(path);
-        self.trained_model.save(&model_path);
+        let path = create_artifact(path);
+        self.model.as_ref().expect("Cannot find model").save(&path);
     }
 }

@@ -14,5 +14,6 @@ pub fn train(arch: &ModelArch, dataset_path: &str) {
         .build_features(100)
         .expect("cannot create features");
 
-    PricePredictionModel::train(arch, &training_data).save("model.json");
+    let mut model = PricePredictionModel::default();
+    model.train(arch, &training_data).save("model.json");
 }

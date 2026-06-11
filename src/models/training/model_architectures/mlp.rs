@@ -1,14 +1,16 @@
-use std::{fs::File, path::PathBuf};
+use std::path::PathBuf;
 
 use rust_mlp::{FitConfig, Metric, Mlp, MlpBuilder};
 
 use crate::models::training::{data_loader::TrainingData, model_architectures::Modelable};
 
+#[derive(Default)]
 pub struct MLP {
-    model: Mlp,
+    model: Option<Mlp>,
 }
-impl MLP {
-    pub fn train(data: &TrainingData) -> Self {
+
+impl Modelable for MLP {
+    fn train(&mut self, data: &TrainingData) {
         let x_train: Vec<Vec<f32>> = data
             .x_train
             .outer_iter()
@@ -49,11 +51,12 @@ impl MLP {
             },
         )
         .expect("Cannot train model");
-        Self { model: mlp }
+        self.model = Some(mlp);
     }
-}
-impl Modelable for MLP {
     fn save(&self, save_path: &PathBuf) {
-        self.model.save_json(save_path);
+        self.model
+            .as_ref()
+            .expect("Called save on a model that doesn't have a model yet")
+            .save_json(save_path);
     }
 }
