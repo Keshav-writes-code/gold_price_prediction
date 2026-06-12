@@ -43,7 +43,7 @@ impl PricePredictionModel {
             .expect("Model must be initialized before calling load()")
             .load();
     }
-    pub fn predict(&self, x_input: &Vec<f64>) -> f64 {
+    pub fn predict(&self, x_input: &[f64]) -> f64 {
         self.model
             .as_ref()
             .expect("Model must be initialized before calling load()")

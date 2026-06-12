@@ -1,5 +1,4 @@
-use ndarray::Array1;
-use rust_mlp::{Dataset, FitConfig, Metric, Mlp, MlpBuilder};
+use rust_mlp::{FitConfig, Metric, Mlp, MlpBuilder};
 
 use crate::{
     config::{create_artifact_path, open_artifact_path},
@@ -69,7 +68,8 @@ impl Modelable for MLP {
         self.model
             .as_ref()
             .expect("Called save on a model that doesn't have a model yet")
-            .save_json(save_path);
+            .save_json(save_path)
+            .expect("cannot save");
     }
     fn load(&mut self) {
         let load_path = open_artifact_path(&self.model_file_name);
@@ -84,7 +84,9 @@ impl Modelable for MLP {
         let vec_f32: Vec<f32> = x_input.iter().map(|&v| v as f32).collect();
         let mut output = vec![0.0_f32; model.output_dim()];
         let mut scratch = model.scratch();
-        model.predict_into(&vec_f32, &mut scratch, &mut output);
+        model
+            .predict_into(&vec_f32, &mut scratch, &mut output)
+            .expect("Cannot predict");
         output[0] as f64
     }
 }
