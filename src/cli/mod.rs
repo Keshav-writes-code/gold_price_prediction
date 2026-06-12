@@ -29,6 +29,10 @@ struct Input {
     /// the model architecture to use for traning or infrence ('linear_regression', 'mlp')
     #[argh(option, short = 'a', default = "ModelArch::LinearRegression")]
     arch: ModelArch,
+
+    /// the learning rate while trnaing
+    #[argh(option, short = 'l', default = "0.04")]
+    lr: f32,
 }
 
 pub fn start_cli() {
@@ -44,7 +48,7 @@ pub fn start_cli() {
         crate::data::visulization::init_visulization();
     }
     if inputs.train {
-        crate::models::training::train(&inputs.arch, "raw_data.csv");
+        crate::models::training::train(&inputs.arch, inputs.lr, "raw_data.csv");
     }
     if inputs.serve {
         crate::serving::serve(&inputs.arch, "raw_data.csv");

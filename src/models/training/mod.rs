@@ -6,7 +6,7 @@ use crate::{
 pub mod data_loader;
 pub mod model_architectures;
 
-pub fn train(arch: &ModelArch, dataset_path: &str) {
+pub fn train(arch: &ModelArch, lr: f32, dataset_path: &str) {
     tracing_subscriber::fmt::init();
 
     let training_data = DataLoader::new(dataset_path)
@@ -14,5 +14,7 @@ pub fn train(arch: &ModelArch, dataset_path: &str) {
         .build_features(100)
         .expect("cannot create features");
 
-    PricePredictionModel::new(arch).train(&training_data).save();
+    PricePredictionModel::new(arch)
+        .train(&training_data, lr)
+        .save();
 }

@@ -20,7 +20,7 @@ impl Default for MLP {
 }
 
 impl Modelable for MLP {
-    fn train(&mut self, data: &TrainingData) {
+    fn train(&mut self, data: &TrainingData, lr: f32) {
         let x_train: Vec<Vec<f32>> = data
             .x_train
             .outer_iter()
@@ -32,11 +32,11 @@ impl Modelable for MLP {
         let dataset = rust_mlp::Dataset::from_rows(&x_train, &y_train).expect("Cannot get dataset");
         let mut mlp = MlpBuilder::new(data.x_dim)
             .unwrap()
-            .add_layer(100, rust_mlp::Activation::ReLU)
+            .add_layer(20, rust_mlp::Activation::ReLU)
             .unwrap()
-            .add_layer(100, rust_mlp::Activation::ReLU)
+            .add_layer(10, rust_mlp::Activation::ReLU)
             .unwrap()
-            .add_layer(100, rust_mlp::Activation::ReLU)
+            .add_layer(1, rust_mlp::Activation::Identity)
             .unwrap()
             .build_with_seed(0)
             .unwrap();
@@ -45,7 +45,7 @@ impl Modelable for MLP {
             None,
             FitConfig {
                 epochs: 100,
-                lr: 0.2,
+                lr,
                 batch_size: 4,
                 shuffle: rust_mlp::Shuffle::Seeded(0),
                 lr_schedule: rust_mlp::LrSchedule::Constant,
@@ -61,6 +61,10 @@ impl Modelable for MLP {
             },
         )
         .expect("Cannot train model");
+        let eval = mlp
+            .evaluate(&dataset, rust_mlp::Loss::Mse, &[Metric::Accuracy])
+            .unwrap();
+        println!("evaluate: loss={} metrics={:?}", eval.loss, eval.metrics);
         self.model = Some(mlp);
     }
     fn save(&self) {

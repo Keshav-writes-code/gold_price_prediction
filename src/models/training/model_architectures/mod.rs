@@ -10,7 +10,7 @@ mod linear_regression;
 mod mlp;
 
 pub trait Modelable: Sync + Send {
-    fn train(&mut self, data: &TrainingData);
+    fn train(&mut self, data: &TrainingData, lr: f32);
     fn save(&self);
     fn load(&mut self);
     fn predict(&self, x_input: &[f64]) -> f64;
@@ -27,11 +27,11 @@ impl PricePredictionModel {
         };
         Self { model: Some(model) }
     }
-    pub fn train(&mut self, training_data: &TrainingData) -> &Self {
+    pub fn train(&mut self, training_data: &TrainingData, lr: f32) -> &Self {
         self.model
             .as_mut()
             .expect("Model must of initialized bwfore calling train()")
-            .train(training_data);
+            .train(training_data, lr);
         self
     }
     pub fn save(&self) {

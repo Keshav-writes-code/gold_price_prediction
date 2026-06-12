@@ -32,7 +32,7 @@ impl Modelable for LR {
         let fd = create_artifact(&self.model_file_name);
         serde_json::to_writer(fd, &self.model).expect("Cannot create Model file");
     }
-    fn train(&mut self, data: &TrainingData) {
+    fn train(&mut self, data: &TrainingData, _lr: f32) {
         let dataset: linfa::DatasetBase<Array2<f64>, Array1<f64>> =
             linfa::Dataset::new(data.x_train.clone(), data.y_train.clone());
         let model = LinearRegression::default()
