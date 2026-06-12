@@ -1,12 +1,23 @@
-use std::path::PathBuf;
+use ndarray::Array1;
+use rust_mlp::{Dataset, FitConfig, Metric, Mlp, MlpBuilder};
 
-use rust_mlp::{FitConfig, Metric, Mlp, MlpBuilder};
+use crate::{
+    config::{create_artifact_path, open_artifact_path},
+    models::training::{data_loader::TrainingData, model_architectures::Modelable},
+};
 
-use crate::models::training::{data_loader::TrainingData, model_architectures::Modelable};
-
-#[derive(Default)]
 pub struct MLP {
     model: Option<Mlp>,
+    model_file_name: String,
+}
+
+impl Default for MLP {
+    fn default() -> Self {
+        Self {
+            model: None,
+            model_file_name: "mlp_model.json".to_string(),
+        }
+    }
 }
 
 impl Modelable for MLP {
@@ -53,10 +64,27 @@ impl Modelable for MLP {
         .expect("Cannot train model");
         self.model = Some(mlp);
     }
-    fn save(&self, save_path: &PathBuf) {
+    fn save(&self) {
+        let save_path = create_artifact_path(&self.model_file_name);
         self.model
             .as_ref()
             .expect("Called save on a model that doesn't have a model yet")
             .save_json(save_path);
+    }
+    fn load(&mut self) {
+        let load_path = open_artifact_path(&self.model_file_name);
+        self.model = Some(rust_mlp::Mlp::load_json(load_path).expect("cannot load MLP Model"));
+    }
+    fn predict(&self, x_input: &[f64]) -> f64 {
+        let model = self
+            .model
+            .as_ref()
+            .expect("Canot call .predict() beofre calling .new() or .load()");
+
+        let vec_f32: Vec<f32> = x_input.iter().map(|&v| v as f32).collect();
+        let mut output = vec![0.0_f32; model.output_dim()];
+        let mut scratch = model.scratch();
+        model.predict_into(&vec_f32, &mut scratch, &mut output);
+        output[0] as f64
     }
 }

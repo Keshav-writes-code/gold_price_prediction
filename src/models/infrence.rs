@@ -1,57 +1,59 @@
 use std::{collections::BTreeMap, sync::RwLock};
 
-use linfa::traits::Predict;
-use linfa_linear::FittedLinearRegression;
-use ndarray::Array2;
-
 use crate::{
-    config::open_artifact,
-    data::ingestion::RAW_DATA_PATH,
-    models::training::{DataLoader, MODEL_PATH, RawData},
+    cli::ModelArch,
+    models::training::{
+        data_loader::{DataLoader, RawData},
+        model_architectures::PricePredictionModel,
+    },
 };
 
 pub struct PricePredictionModelInfrence {
-    dataset_traning: RawData,
+    dataset_training: RawData,
     cached_predictions: RwLock<BTreeMap<i64, f64>>,
-    model: FittedLinearRegression<f64>,
-}
-impl Default for PricePredictionModelInfrence {
-    fn default() -> Self {
-        let file = open_artifact(MODEL_PATH);
-        let model: FittedLinearRegression<f64> =
-            serde_json::from_reader(file).expect("cannot load model");
-
-        let dataset_training = DataLoader::new(RAW_DATA_PATH).load();
-
-        Self {
-            dataset_traning: dataset_training,
-            cached_predictions: RwLock::new(BTreeMap::new()),
-            model,
-        }
-    }
+    model: PricePredictionModel,
 }
 
 impl PricePredictionModelInfrence {
+    pub fn new(arch: &ModelArch, dataset_path: &str) -> Self {
+        let dataset_training = DataLoader::new(dataset_path).load();
+
+        let cached_predictions = RwLock::new(BTreeMap::new());
+
+        let mut model = PricePredictionModel::new(arch);
+        model.load();
+
+        Self {
+            dataset_training,
+            cached_predictions,
+            model,
+        }
+    }
     pub fn predict(&self, target_time: i64) -> f64 {
-        let target_time = (target_time / 86400) * 86400;
+        let target_time_rounded = (target_time / 86400) * 86400;
 
         // if prediction is cached
-        if let Some(&pred) = self.cached_predictions.read().unwrap().get(&target_time) {
+        if let Some(&pred) = self
+            .cached_predictions
+            .read()
+            .unwrap()
+            .get(&target_time_rounded)
+        {
             return pred;
         }
 
         // if User ask for a date from the traning dataset
         if let Some(idx) = self
-            .dataset_traning
+            .dataset_training
             .dates
             .iter()
-            .position(|&d| d == target_time)
+            .position(|&d| d == target_time_rounded)
         {
-            return self.dataset_traning.prices[idx];
+            return self.dataset_training.prices[idx];
         }
 
         let max_historical_time = *self
-            .dataset_traning
+            .dataset_training
             .dates
             .last()
             .expect("cannot find last element");
@@ -59,7 +61,7 @@ impl PricePredictionModelInfrence {
 
         let mut current_time = start_time;
 
-        while current_time <= target_time {
+        while current_time <= target_time_rounded {
             if !self
                 .cached_predictions
                 .read()
@@ -67,13 +69,11 @@ impl PricePredictionModelInfrence {
                 .contains_key(&current_time)
             {
                 let features = self.build_infrence_input(current_time);
-                let x_inputs = Array2::from_shape_vec((1, 99), features).unwrap();
-
-                let prediction = self.model.predict(&x_inputs);
+                let prediction = self.model.predict(&features);
                 self.cached_predictions
                     .write()
                     .unwrap()
-                    .insert(current_time, prediction[0]);
+                    .insert(current_time, prediction);
             }
             current_time += 86400;
         }
@@ -81,7 +81,7 @@ impl PricePredictionModelInfrence {
             .cached_predictions
             .read()
             .unwrap()
-            .get(&target_time)
+            .get(&target_time_rounded)
             .unwrap_or(&0.0)
     }
     pub fn build_infrence_input(&self, target_time: i64) -> Vec<f64> {
@@ -101,7 +101,7 @@ impl PricePredictionModelInfrence {
         }
 
         if features.len() < 99 {
-            for &price in self.dataset_traning.prices.iter().rev() {
+            for &price in self.dataset_training.prices.iter().rev() {
                 features.push(price);
                 if features.len() == 99 {
                     break;

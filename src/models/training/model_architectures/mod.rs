@@ -1,8 +1,5 @@
-use std::path::PathBuf;
-
 use crate::{
     cli::ModelArch,
-    config::create_artifact,
     models::training::{
         data_loader::TrainingData,
         model_architectures::{linear_regression::LR, mlp::MLP},
@@ -12,47 +9,44 @@ use crate::{
 mod linear_regression;
 mod mlp;
 
-pub trait Modelable {
+pub trait Modelable: Sync + Send {
     fn train(&mut self, data: &TrainingData);
-    fn save(&self, save_path: &PathBuf);
+    fn save(&self);
+    fn load(&mut self);
+    fn predict(&self, x_input: &[f64]) -> f64;
 }
 
-enum Models {
-    LinearRegression(LR),
-    Mlp(MLP),
-}
-
-impl Modelable for Models {
-    fn train(&mut self, data: &TrainingData) {
-        match self {
-            Models::LinearRegression(model) => model.train(data),
-            Models::Mlp(model) => model.train(data),
-        }
-    }
-    fn save(&self, save_path: &PathBuf) {
-        match self {
-            Models::LinearRegression(model) => model.save(save_path),
-            Models::Mlp(model) => model.save(save_path),
-        }
-    }
-}
-
-#[derive(Default)]
 pub struct PricePredictionModel {
-    model: Option<Models>,
+    model: Option<Box<dyn Modelable>>,
 }
 impl PricePredictionModel {
-    pub fn train(&mut self, arch: &ModelArch, training_data: &TrainingData) -> &Self {
-        let mut model: Models = match arch {
-            ModelArch::LinearRegression => Models::LinearRegression(LR::default()),
-            ModelArch::Mlp => Models::Mlp(MLP::default()),
+    pub fn new(arch: &ModelArch) -> Self {
+        let model: Box<dyn Modelable> = match arch {
+            ModelArch::LinearRegression => Box::new(LR::default()),
+            ModelArch::Mlp => Box::new(MLP::default()),
         };
-        model.train(training_data);
-        self.model = Some(model);
+        Self { model: Some(model) }
+    }
+    pub fn train(&mut self, training_data: &TrainingData) -> &Self {
+        self.model
+            .as_mut()
+            .expect("Model must of initialized bwfore calling train()")
+            .train(training_data);
         self
     }
-    pub fn save(&self, path: &str) {
-        let path = create_artifact(path);
-        self.model.as_ref().expect("Cannot find model").save(&path);
+    pub fn save(&self) {
+        self.model.as_ref().expect("Cannot find model").save();
+    }
+    pub fn load(&mut self) {
+        self.model
+            .as_mut()
+            .expect("Model must be initialized before calling load()")
+            .load();
+    }
+    pub fn predict(&self, x_input: &Vec<f64>) -> f64 {
+        self.model
+            .as_ref()
+            .expect("Model must be initialized before calling load()")
+            .predict(x_input)
     }
 }

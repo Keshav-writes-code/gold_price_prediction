@@ -47,6 +47,6 @@ pub fn start_cli() {
         crate::models::training::train(&inputs.arch, "raw_data.csv");
     }
     if inputs.serve {
-        crate::serving::serve(&inputs.arch);
+        crate::serving::serve(&inputs.arch, "raw_data.csv");
     }
 }

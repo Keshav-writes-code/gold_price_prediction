@@ -3,7 +3,7 @@ use actix_web::{App, HttpResponse, HttpServer, Responder, get, post, web};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
-use crate::models::infrence::PricePredictionModelInfrence;
+use crate::{cli::ModelArch, models::infrence::PricePredictionModelInfrence};
 
 #[derive(Deserialize)]
 struct PredictionReq {
@@ -16,9 +16,10 @@ struct PredictionResponse {
 }
 
 #[actix_web::main]
-pub async fn serve() {
+pub async fn serve(arch: &ModelArch, dataset_path: &str) {
     tracing_subscriber::fmt::init();
-    let model = PricePredictionModelInfrence::default();
+
+    let model = PricePredictionModelInfrence::new(arch, dataset_path);
     let model_arc = web::Data::new(model);
 
     info!("Serving the WebApp at http://0.0.0.0:8080/");
