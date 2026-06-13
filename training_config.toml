@@ -1,2 +1,2 @@
-arch = "LinearRegression"
+arch = "Mlp"
 learning_rate = 0.016
