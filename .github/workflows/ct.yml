@@ -1,6 +1,8 @@
 name: Continuos Traning
 on:
-  push
+  push:
+    branches:
+      - ml_experiments
 
 jobs:
   build_cli:
@@ -20,6 +22,11 @@ jobs:
 
       - name: Build Cli
         run: cargo build --release
-      
+
+      - name: Aquire Data
+        run: cargo run --release -- -p
+
+      - name: Train Model on Data
+        run: cargo run --release -- -t    
     
     
