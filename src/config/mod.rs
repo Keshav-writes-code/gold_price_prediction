@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, path::Path};
 
 use serde::{Deserialize, Serialize};
 
@@ -26,15 +26,15 @@ impl Default for Config {
 
 pub fn get_config() -> (ModelArch, f32) {
     const CONFIG_FILE_NAME: &str = "training_config.toml";
-    if let Ok(_) = fs::exists(CONFIG_FILE_NAME) {
+    if Path::new(CONFIG_FILE_NAME).exists() {
         let str_data =
-            fs::read_to_string("train_config.toml").expect("cannot find traning config file");
+            fs::read_to_string(CONFIG_FILE_NAME).expect("cannot find traning config file");
         let data: Config = toml::from_str(&str_data).unwrap_or_default();
         (data.arch, data.learning_rate)
     } else {
         let config = Config::default();
         let content_toml = toml::to_string(&config).expect("cannot serialize data");
-        fs::write(CONFIG_FILE_NAME, content_toml);
+        fs::write(CONFIG_FILE_NAME, content_toml).expect("Cannot create file");
         (config.arch, config.learning_rate)
     }
 }

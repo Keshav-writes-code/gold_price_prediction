@@ -1,10 +1,6 @@
-use argh::{FromArgValue, FromArgs};
+use argh::FromArgs;
 
-#[derive(FromArgValue, Clone, Copy)]
-pub enum ModelArch {
-    LinearRegression,
-    Mlp,
-}
+use crate::config::get_config;
 
 #[derive(FromArgs)]
 /// Inpouts.
@@ -26,18 +22,15 @@ struct Input {
     #[argh(switch, short = 's')]
     serve: bool,
 
-    /// the model architecture to use for traning or infrence ('linear_regression', 'mlp')
-    #[argh(option, short = 'a', default = "ModelArch::LinearRegression")]
-    arch: ModelArch,
-
-    /// the learning rate while trnaing
-    #[argh(option, short = 'l', default = "0.04")]
-    lr: f32,
+    /// config file path
+    #[argh(option, short = 'c')]
+    config_file: Option<String>,
 }
 
 pub fn start_cli() {
-    crate::config::init();
+    crate::utility::init();
     let inputs: Input = argh::from_env();
+
     if inputs.pull {
         // logic to download data from cagle and store then in a sqlite database
         crate::data::ingestion::hanlde_ingestion("raw_data.csv");
@@ -48,9 +41,11 @@ pub fn start_cli() {
         crate::data::visulization::init_visulization();
     }
     if inputs.train {
-        crate::models::training::train(&inputs.arch, inputs.lr, "raw_data.csv");
+        let (arch, lr) = get_config();
+        crate::models::training::train(&arch, lr, "raw_data.csv");
     }
     if inputs.serve {
-        crate::serving::serve(&inputs.arch, "raw_data.csv");
+        let (arch, _) = get_config();
+        crate::serving::serve(&arch, "raw_data.csv");
     }
 }
