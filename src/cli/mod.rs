@@ -41,11 +41,11 @@ pub fn start_cli() {
         crate::data::visulization::init_visulization();
     }
     if inputs.train {
-        let (arch, lr) = get_config();
+        let (arch, lr) = get_config(inputs.config_file.as_deref());
         crate::models::training::train(&arch, lr, "raw_data.csv");
     }
     if inputs.serve {
-        let (arch, _) = get_config();
+        let (arch, _) = get_config(inputs.config_file.as_deref());
         crate::serving::serve(&arch, "raw_data.csv");
     }
 }

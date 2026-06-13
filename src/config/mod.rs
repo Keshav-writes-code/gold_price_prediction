@@ -1,4 +1,4 @@
-use std::{fs, path::Path};
+use std::{fs, io::ErrorKind};
 
 use serde::{Deserialize, Serialize};
 
@@ -24,17 +24,26 @@ impl Default for Config {
     }
 }
 
-pub fn get_config() -> (ModelArch, f32) {
-    const CONFIG_FILE_NAME: &str = "training_config.toml";
-    if Path::new(CONFIG_FILE_NAME).exists() {
-        let str_data =
-            fs::read_to_string(CONFIG_FILE_NAME).expect("cannot find traning config file");
-        let data: Config = toml::from_str(&str_data).unwrap_or_default();
-        (data.arch, data.learning_rate)
-    } else {
-        let config = Config::default();
-        let content_toml = toml::to_string(&config).expect("cannot serialize data");
-        fs::write(CONFIG_FILE_NAME, content_toml).expect("Cannot create file");
-        (config.arch, config.learning_rate)
-    }
+pub fn get_config(file_path: Option<&str>) -> (ModelArch, f32) {
+    const DEFAULT_PATH: &str = "training_config.toml";
+
+    let (path, create_if_missing) = match file_path {
+        Some(path) => (path, false),
+        None => (DEFAULT_PATH, true),
+    };
+
+    let config = match fs::read_to_string(path) {
+        Ok(content) => toml::from_str(&content).expect("Cammpt parse toml"),
+        Err(e) if e.kind() == ErrorKind::NotFound && create_if_missing => {
+            let default_config = Config::default();
+            let content_toml = toml::to_string_pretty(&default_config).expect("Canot read toml");
+            fs::write(path, &content_toml).expect("Cannot pase data");
+            default_config
+        }
+        Err(_) => {
+            panic!("Coudn't open file");
+        }
+    };
+
+    (config.arch, config.learning_rate)
 }
