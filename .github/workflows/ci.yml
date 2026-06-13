@@ -1,0 +1,26 @@
+name: Continuos Intergration
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_cli:
+    name: Build CLI for the app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: sh
+    steps:
+      - name: Os Setup
+        run: sudo apt update && sudo apt install mold
+      - name: Setup rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Checkout Repo
+        uses: actions/checkout@v6
+
+      - name: Build Cli
+        run: cargo check
+
+    
