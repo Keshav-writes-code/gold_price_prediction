@@ -1,4 +1,4 @@
-use crate::{config::open_artifact, data::ingestion::GoldRecord};
+use crate::{data::ingestion::GoldRecord, utility::open_artifact};
 use chrono::NaiveDate;
 use csv::Reader;
 use ndarray::{Array1, Array2};

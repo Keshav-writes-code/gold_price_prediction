@@ -1,5 +1,5 @@
 use crate::{
-    cli::ModelArch,
+    config::ModelArch,
     models::training::{
         data_loader::TrainingData,
         model_architectures::{linear_regression::LR, mlp::MLP},

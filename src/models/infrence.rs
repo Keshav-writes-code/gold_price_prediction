@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, sync::RwLock};
 
 use crate::{
-    cli::ModelArch,
+    config::ModelArch,
     models::training::{
         data_loader::{DataLoader, RawData},
         model_architectures::PricePredictionModel,

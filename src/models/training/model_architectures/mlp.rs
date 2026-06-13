@@ -1,8 +1,8 @@
 use rust_mlp::{FitConfig, Metric, Mlp, MlpBuilder};
 
 use crate::{
-    config::{create_artifact_path, open_artifact_path},
     models::training::{data_loader::TrainingData, model_architectures::Modelable},
+    utility::{create_artifact_path, open_artifact_path},
 };
 
 pub struct MLP {

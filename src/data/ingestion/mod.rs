@@ -1,4 +1,4 @@
-use crate::config::create_artifact;
+use crate::utility::create_artifact;
 
 use self::internet_zip_ingestion::ZipIngestion;
 use ndarray::Array1;

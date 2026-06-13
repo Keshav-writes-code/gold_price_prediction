@@ -3,8 +3,8 @@ use linfa_linear::{FittedLinearRegression, LinearRegression};
 use ndarray::{Array1, Array2, ArrayView};
 
 use crate::{
-    config::{create_artifact, open_artifact},
     models::training::{data_loader::TrainingData, model_architectures::Modelable},
+    utility::{create_artifact, open_artifact},
 };
 
 pub struct LR {

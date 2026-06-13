@@ -1,5 +1,5 @@
 use crate::{
-    cli::ModelArch,
+    config::ModelArch,
     models::training::{data_loader::DataLoader, model_architectures::PricePredictionModel},
 };
 

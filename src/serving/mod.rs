@@ -3,7 +3,7 @@ use actix_web::{App, HttpResponse, HttpServer, Responder, get, post, web};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
-use crate::{cli::ModelArch, models::infrence::PricePredictionModelInfrence};
+use crate::{config::ModelArch, models::infrence::PricePredictionModelInfrence};
 
 #[derive(Deserialize)]
 struct PredictionReq {
