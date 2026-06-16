@@ -1207,7 +1207,7 @@ dependencies = [
 
 [[package]]
 name = "gold_price_prediction"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "actix-cors",
  "actix-files",
