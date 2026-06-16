@@ -25,48 +25,48 @@
   --text-dim:#8a8880;
   --green:#34d399;
   --red:#f87171;
-  --radius:14px;
+  --radius:16px;
 }
 html{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-body{min-height:100vh;padding:24px;max-width:1280px;margin:0 auto}
+body{
+  min-height:100vh;
+  padding:40px 24px;
+  max-width:1200px;
+  margin:0 auto;
+  background: radial-gradient(circle at top right, rgba(212,175,55,0.06), transparent 40%),
+              radial-gradient(circle at bottom left, rgba(52,211,153,0.04), transparent 40%),
+              var(--bg);
+}
 
 /* header */
-header{display:flex;align-items:center;gap:14px;margin-bottom:32px}
-.logo{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#f5d76e);display:grid;place-items:center;font-weight:700;font-size:18px;color:#0b0c10;flex-shrink:0;box-shadow:0 0 24px var(--gold-glow)}
-header h1{font-size:1.35rem;font-weight:600;letter-spacing:-.02em}
-header p{font-size:.8rem;color:var(--text-dim);margin-top:2px}
-
-/* stat cards */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;transition:border-color .3s,box-shadow .3s}
-.stat-card:hover{border-color:var(--gold-dim);box-shadow:0 0 20px var(--gold-glow)}
-.stat-card .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:6px}
-.stat-card .value{font-size:1.45rem;font-weight:700;font-variant-numeric:tabular-nums}
-.stat-card .sub{font-size:.72rem;margin-top:4px}
-.up{color:var(--green)} .down{color:var(--red)}
+header{display:flex;align-items:center;gap:18px;margin-bottom:48px}
+.logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--gold),#f5d76e);display:grid;place-items:center;font-weight:700;font-size:22px;color:#0b0c10;flex-shrink:0;box-shadow:0 8px 24px var(--gold-glow);transform:rotate(-4deg);transition:transform .3s ease}
+.logo:hover{transform:rotate(0deg) scale(1.05)}
+header h1{font-size:1.8rem;font-weight:700;letter-spacing:-.03em;background:linear-gradient(135deg,#fff,#a8892c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header p{font-size:.9rem;color:var(--text-dim);margin-top:4px}
 
 /* chart */
-.chart-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:28px}
-.chart-panel h2{font-size:.95rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.chart-panel h2::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold-glow)}
-.chart-wrap{position:relative;height:420px}
+.chart-panel{background:rgba(19,21,26,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.05);border-radius:24px;padding:32px;margin-bottom:32px;box-shadow:0 16px 40px rgba(0,0,0,.3)}
+.chart-panel h2{font-size:1.1rem;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.chart-panel h2::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold-glow)}
+.chart-wrap{position:relative;height:480px}
 
 /* controls */
-.controls{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;display:flex;flex-wrap:wrap;align-items:end;gap:16px;margin-bottom:28px}
+.controls{background:rgba(19,21,26,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.05);border-radius:24px;padding:28px 32px;display:flex;flex-wrap:wrap;align-items:end;gap:20px;margin-bottom:32px;box-shadow:0 16px 40px rgba(0,0,0,.3)}
 
 /* ── Date Picker ── */
 .dp-field{display:flex;flex-direction:column;gap:6px;position:relative}
 .dp-field .dp-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);display:flex;align-items:center;gap:6px}
 .dp-trigger{
-  background:var(--surface-2);border:1px solid var(--border);border-radius:10px;
-  padding:12px 16px;color:var(--text);font-family:'Inter',system-ui,sans-serif;
-  font-size:.88rem;font-weight:500;outline:none;cursor:pointer;
-  min-width:190px;display:flex;align-items:center;gap:10px;
+  background:rgba(26,29,37,.6);border:1px solid rgba(255,255,255,.08);border-radius:12px;
+  padding:14px 20px;color:var(--text);font-family:'Inter',system-ui,sans-serif;
+  font-size:.9rem;font-weight:500;outline:none;cursor:pointer;
+  min-width:200px;display:flex;align-items:center;gap:12px;
   transition:border-color .3s, box-shadow .3s, background .3s;
   user-select:none;
 }
-.dp-trigger:hover{border-color:var(--gold-dim);background:#1f222c}
-.dp-trigger.active{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow), 0 4px 16px rgba(212,175,55,.1);background:#1f222c}
+.dp-trigger:hover{border-color:var(--gold-dim);background:rgba(26,29,37,.9)}
+.dp-trigger.active{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow), 0 8px 24px rgba(212,175,55,.15);background:rgba(26,29,37,.9)}
 .dp-trigger svg{width:18px;height:18px;fill:var(--gold-dim);flex-shrink:0}
 .dp-trigger .dp-text{flex:1}
 .dp-trigger .dp-chevron{width:12px;height:12px;fill:var(--text-dim);transition:transform .25s}
@@ -165,13 +165,13 @@ header p{font-size:.8rem;color:var(--text-dim);margin-top:2px}
 .date-arrow svg{width:28px;height:28px;stroke:var(--gold-dim);stroke-width:1.5;fill:none;opacity:.4}
 
 button.predict-btn{
-  background:linear-gradient(135deg,var(--gold),#c9a227);
-  color:#0b0c10;font-weight:600;font-size:.85rem;
-  padding:12px 32px;border:none;border-radius:10px;cursor:pointer;
-  transition:transform .2s,box-shadow .2s;
-  display:flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,var(--gold),#f5d76e);
+  color:#0b0c10;font-weight:600;font-size:.95rem;
+  padding:14px 36px;border:none;border-radius:12px;cursor:pointer;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  display:flex;align-items:center;gap:10px;
 }
-button.predict-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px var(--gold-glow)}
+button.predict-btn:hover{transform:translateY(-3px);box-shadow:0 10px 28px var(--gold-glow)}
 button.predict-btn:active{transform:translateY(0)}
 button.predict-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
 
@@ -187,8 +187,8 @@ button.predict-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-sha
 footer{text-align:center;color:var(--text-dim);font-size:.72rem;padding:16px 0;border-top:1px solid var(--border);margin-top:12px}
 
 @media(max-width:640px){
-  body{padding:14px}
-  .chart-wrap{height:280px}
+  body{padding:20px}
+  .chart-wrap{height:320px}
   .controls{flex-direction:column;align-items:stretch}
   button.predict-btn{width:100%;justify-content:center}
   .date-arrow{justify-content:center}
@@ -205,26 +205,6 @@ footer{text-align:center;color:var(--text-dim);font-size:.72rem;padding:16px 0;b
     <p>Linear-regression model · Historical INR prices</p>
   </div>
 </header>
-
-<section class="stats">
-  <div class="stat-card">
-    <div class="label">Latest Price</div>
-    <div class="value" id="stat-latest">—</div>
-    <div class="sub" id="stat-date"></div>
-  </div>
-  <div class="stat-card">
-    <div class="label">All-Time High</div>
-    <div class="value" id="stat-high">—</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">All-Time Low</div>
-    <div class="value" id="stat-low">—</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Data Points</div>
-    <div class="value" id="stat-count">—</div>
-  </div>
-</section>
 
 <section class="chart-panel">
   <h2>Price History &amp; Forecast</h2>
@@ -277,8 +257,6 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
 let chart;
-let historicalDates = [];
-let historicalPrices = [];
 
 function showToast(msg, isError){
   const t = document.getElementById('toast');
@@ -555,7 +533,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // set defaults
   setDefaultDates();
   initChart();
-  loadHistorical();
 
   // close picker when clicking outside
   document.addEventListener('click', (e) => {
@@ -569,76 +546,18 @@ function setDefaultDates(){
   const future = new Date(today);
   future.setDate(future.getDate() + 90);
 
-  if (historicalDates.length > 0) {
-    const last = historicalDates[historicalDates.length - 1];
-    const from = new Date((last + 86400) * 1000);
-    const to   = new Date((last + 86400 * 90) * 1000);
-    dpStart.setDate(from);
-    dpEnd.setDate(to);
-  } else {
-    dpStart.setDate(today);
-    dpEnd.setDate(future);
-  }
-}
-
-async function loadHistorical(){
-  try {
-    const res = await fetch(API_BASE + '/api/historical');
-    if (!res.ok) throw new Error('Failed to load data');
-    const data = await res.json();
-    historicalDates = data.dates;
-    historicalPrices = data.prices;
-    populateStats();
-    updateChartWithHistory();
-    setDefaultDates();
-  } catch(e) {
-    showToast('Historical data unavailable — predictions still work', true);
-    console.error(e);
-  }
-}
-
-/* ── stats ── */
-function populateStats(){
-  const n = historicalPrices.length;
-  if (n < 2) return;
-  const latest = historicalPrices[n - 1];
-  const prev = historicalPrices[n - 2];
-  const high = Math.max(...historicalPrices);
-  const low  = Math.min(...historicalPrices.filter(p => p > 0));
-
-  document.getElementById('stat-latest').textContent = INR.format(latest);
-  const diff = ((latest - prev) / prev * 100).toFixed(2);
-  const cls = diff >= 0 ? 'up' : 'down';
-  const arrow = diff >= 0 ? '▲' : '▼';
-  document.getElementById('stat-date').innerHTML =
-    `<span class="${cls}">${arrow} ${Math.abs(diff)}% vs prior</span>`;
-  document.getElementById('stat-high').textContent = INR.format(high);
-  document.getElementById('stat-low').textContent  = INR.format(low);
-  document.getElementById('stat-count').textContent = n.toLocaleString();
+  dpStart.setDate(today);
+  dpEnd.setDate(future);
 }
 
 /* ── chart ── */
 function initChart(){
   const ctx = document.getElementById('priceChart').getContext('2d');
-  const grad = ctx.createLinearGradient(0, 0, 0, 420);
-  grad.addColorStop(0, 'rgba(212,175,55,.28)');
-  grad.addColorStop(1, 'rgba(212,175,55,.0)');
 
   chart = new Chart(ctx, {
     type: 'line',
     data: {
-      datasets: [{
-        label: 'Historical Price (INR)',
-        data: [],
-        borderColor: '#d4af37',
-        backgroundColor: grad,
-        borderWidth: 1.8,
-        pointRadius: 0,
-        pointHitRadius: 6,
-        fill: true,
-        tension: .3,
-        order: 2
-      }]
+      datasets: []
     },
     options: {
       responsive: true,
@@ -676,13 +595,6 @@ function initChart(){
     }
   });
 }
-
-function updateChartWithHistory(){
-  if (!chart || historicalDates.length === 0) return;
-  chart.data.datasets[0].data = historicalDates.map((d, i) => ({ x: tsToDate(d), y: historicalPrices[i] }));
-  chart.update();
-}
-
 /* ── fetch predictions ── */
 async function fetchPredictions(){
   const btn  = document.getElementById('predictBtn');
@@ -715,7 +627,7 @@ async function fetchPredictions(){
     }
 
     // replace old prediction layer
-    if (chart.data.datasets.length > 1) chart.data.datasets.pop();
+    if (chart.data.datasets.length > 0) chart.data.datasets.pop();
 
     const ctx = document.getElementById('priceChart').getContext('2d');
     const predGrad = ctx.createLinearGradient(0, 0, 0, 420);
