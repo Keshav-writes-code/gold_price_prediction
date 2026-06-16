@@ -14,7 +14,7 @@
 
 Here're some of the project's best features:
 
-*   You can run this locally! see the [run locally](#run-locally) instruction
+*   You can run this locally! see the [run locally](#%EF%B8%8F-run-locally) instruction
 *   Support Mlp and Linear Regression Model Architectures
 *   Training is configured by a training config file
 *   Includes a simple web frontend to interract with the model
